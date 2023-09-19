@@ -1,8 +1,9 @@
 # OLX Odessa New Goods Parser
 ---
-.env file:
+.env file (MODE=DEV or MODE=PROD):
 ```
 BOT_TOKEN
+MODE
 ```
 
 run app:

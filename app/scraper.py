@@ -31,14 +31,14 @@ class OLXParser:
     def parse_link(link):
         return link.split('.')[0].split('-')[-1]
 
-    def is_private(self, url):
-        html = self.get_html(url)
-        is_private = html.xpath(
-            '/html/body/div/div[2]/div[3]/div[3]/div[1]/div[2]/ul/li[1]/p/span',
-            first=True
-        ).text
+    # def is_private(self, url):
+    #     html = self.get_html(url)
+    #     is_private = html.xpath(
+    #         '/html/body/div/div[2]/div[3]/div[3]/div[1]/div[2]/ul/li[1]/p/span',
+    #         first=True
+    #     ).text
 
-        return is_private == 'Приватна особа'
+    #     return is_private == 'Приватна особа'
 
     def get_data(self):
         html = self.get_html(URL)
@@ -51,7 +51,9 @@ class OLXParser:
             link = article.find('a', first=True).attrs['href']
             parse_link = self.parse_link(link)
 
-            if parse_link not in self.ad_id_list and self.is_private(f'https://www.olx.ua{link}'):
+            # if parse_link not in self.ad_id_list and self.is_private(f'https://www.olx.ua{link}'):
+
+            if parse_link not in self.ad_id_list:
                 self.ad_id_list.append(parse_link)
 
                 title = article.find('[data-cy="l-card"] h6', first=True).text

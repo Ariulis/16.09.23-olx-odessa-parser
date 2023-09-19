@@ -6,7 +6,7 @@ from loguru import logger
 logger.add('log/debug.log', level='DEBUG',
            format='{time} {level} {message}', rotation='10 KB', compression='zip')
 
-URL = 'https://www.olx.ua/uk/odessa/?search%5Bfilter_enum_state%5D%5B0%5D=new'
+URL = 'https://www.olx.ua/uk/odessa/?search%5Bfilter_enum_state%5D%5B0%5D=new&search[private_business]=private'
 
 
 HEADERS = {
