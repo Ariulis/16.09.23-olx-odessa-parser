@@ -3,9 +3,8 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
-from aiogram.utils.formatting import Text
 from aiogram.utils.markdown import hlink
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message
 from requests_html import HTMLSession
 
 
@@ -15,13 +14,21 @@ from scraper import OLXParser
 from bot.keyboards import make_row_keyboard
 from bot.proxy import router as proxy_router
 
+bot = Bot(
+    settings.BOT_TOKEN.get_secret_value(),
+    parse_mode=ParseMode.HTML
+)
 dp = Dispatcher()
 dp.include_router(proxy_router)
 
 MODE = settings.MODE
 
-start_buttons = ['💾 Прокси', '🎇 Начать работу'] if MODE != 'DEV' else ['🎇 Начать работу']
-end_button = ['Закончить парсинг']
+proxy_button = ['💾 Прокси']
+start_button = ['🎇 Начать работу']
+end_button = ['📉 Закончить парсинг']
+start_buttons = [proxy_button, start_button] if MODE != 'DEV' else start_button
+
+stopped: bool = False
 
 
 def get_links(session, proxy_data):
@@ -53,6 +60,8 @@ async def command_start_work(
     message: Message,
     state: FSMContext
 ) -> None:
+    global stopped
+
     if MODE != 'DEV':
         try:
             proxy_data = await state.get_data()
@@ -73,7 +82,6 @@ async def command_start_work(
 
                     if len(links) > 0:
                         for link in links:
-                            msg = Text()
                             msg = f'{hlink(link["title"], link["link"])} 🆕\n{hlink("", link["img"])}'
                             await message.answer(msg)
                             await asyncio.sleep(1)
@@ -90,10 +98,19 @@ async def command_start_work(
         session = HTMLSession()
         await message.answer(
             'Идет парсинг...',
-            reply_markup=ReplyKeyboardRemove()
+            reply_markup=make_row_keyboard(end_button)
         )
 
         while True:
+
+            if stopped:
+                await message.answer(
+                    'Парсинг остановлен!',
+                    reply_markup=make_row_keyboard(start_button)
+                )
+                stopped = False
+                break
+
             links = get_links(
                 session,
                 proxy
@@ -101,7 +118,6 @@ async def command_start_work(
 
             if len(links) > 0:
                 for link in links:
-                    msg = Text()
                     msg = f'{hlink(link["title"], link["link"])} 🆕\n{hlink("", link["img"])}'
                     await message.answer(msg)
                     await asyncio.sleep(1)
@@ -111,11 +127,13 @@ async def command_start_work(
             await asyncio.sleep(60)
 
 
+@dp.message(F.text == '📉 Закончить парсинг')
+async def stop_bot(message: Message) -> None:
+    global stopped
+    stopped = True
+
+
 async def main() -> None:
-    bot = Bot(
-        settings.BOT_TOKEN.get_secret_value(),
-        parse_mode=ParseMode.HTML
-    )
     await dp.start_polling(bot)
 
 
