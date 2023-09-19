@@ -24,6 +24,7 @@ class OLXParser:
             logger.exception(e)
         else:
             if response.ok:
+                logger.info(f'Connection is success. Url: {url}')
                 return response.html
             return response.status_code
 
